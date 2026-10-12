@@ -1,0 +1,18 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;800&display=swap"><link rel="stylesheet" href="/style.css"><title>Garden Market</title></head><body>
+<main style="max-width:520px;margin:0 auto">
+<div class="row" style="justify-content:flex-start"><img src="/ava.png" alt="" width="72" height="72"><h1>Garden Market</h1></div><p id="st" class="chip" style="background:#FFEBA6;align-self:flex-start">Memuat...</p>
+<form id="rf" class="card"><h2 class="f" style="margin:0 0 8px">Daftar jadi reseller</h2><label for="nm">Nama</label><input id="nm" required maxlength="60"><label for="hp">Nomor WhatsApp</label><input id="hp" type="tel" inputmode="tel" required maxlength="20"><button class="btn" style="background:#A8DCF2">Daftar</button></form>
+<form id="of" class="card"><h2 class="f" style="margin:0 0 8px">Buat pesanan</h2><label for="pr">Produk</label><select id="pr" required></select><label for="qt">Jumlah</label><input id="qt" type="number" min="1" value="1" required><button class="btn" style="background:#FF7EBB">Pesan</button></form>
+<div id="ls" class="card" hidden><p id="msg" style="margin:0 0 10px"></p><img id="qr" src="/qris.png" alt="QRIS pembayaran" style="max-width:100%;border-radius:16px" onerror="this.hidden=true"><button id="pd" class="btn" style="background:#9BE3AE;margin-top:10px">Saya sudah bayar</button></div>
+<p id="er" role="alert"></p></main>
+<script>
+const $=i=>document.getElementById(i),L=localStorage;
+const call=async(b)=>{try{return await (await fetch("/api/store",b?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)}:{})).json()}catch{return{error:"Gagal terhubung"}}};
+const show=r=>{$("er").textContent=r.error||""};
+const load=()=>call().then(r=>{$("st").textContent=r.open?"Toko buka":"Toko tutup";$("pr").replaceChildren(...(r.products||[]).map(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name+" - Rp "+p.price.toLocaleString("id-ID")+" (stok "+p.stock+")";return o}))});
+load();
+$("rf").onsubmit=async e=>{e.preventDefault();const r=await call({action:"register",name:$("nm").value,phone:$("hp").value});show(r);if(r.memberId){L.mid=r.memberId;$("er").textContent="Terdaftar. Tunggu admin menyetujui akun Anda."}};
+$("of").onsubmit=async e=>{e.preventDefault();const r=await call({action:"order",memberId:L.mid,productId:$("pr").value,qty:$("qt").value});show(r);if(r.orderId){L.oid=r.orderId;$("ls").hidden=false;$("pd").hidden=false;$("msg").textContent="Pesanan #"+r.orderId+" dibuat. Bayar via QRIS, lalu tekan tombol di bawah.";load()}};
+$("pd").onclick=async()=>{const r=await call({action:"paid",orderId:L.oid,memberId:L.mid});show(r);if(r.ok){$("msg").textContent="Terima kasih! Admin akan memverifikasi pembayaran Anda.";$("pd").hidden=true}};
+</script></body>
+</html>
