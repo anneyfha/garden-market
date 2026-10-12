@@ -42,7 +42,8 @@ const notify = async (title, body, tab) => {
 };
 
 export default async (req) => {
-  const path = new URL(req.url).pathname.replace(/\/$/, "");
+  const raw = new URL(req.url).pathname.replace(/\/$/, "");
+  const path = "/api" + (/\/api(\/.*)?$/.exec(raw)?.[1] ?? "");
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const E = process.env;
 
@@ -133,4 +134,3 @@ export default async (req) => {
   return json({ error: "Tidak ditemukan" }, 404);
 };
 
-export const config = { path: "/api/*" };
